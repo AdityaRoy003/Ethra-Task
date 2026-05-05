@@ -11,14 +11,14 @@ const Tasks = () => {
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
-      const { data } = await api.get('/tasks');
+      const { data } = await api.get('tasks');
       return data;
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ taskId, status }) => {
-      const { data } = await api.put(`/tasks/${taskId}`, { status });
+      const { data } = await api.put(`tasks/${taskId}`, { status });
       return data;
     },
     onSuccess: () => {

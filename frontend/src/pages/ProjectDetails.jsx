@@ -57,14 +57,14 @@ const ProjectDetails = () => {
   const { data: project, isLoading } = useQuery({
     queryKey: ['project', id],
     queryFn: async () => {
-      const { data } = await api.get(`/projects/${id}`);
+      const { data } = await api.get(`projects/${id}`);
       return data;
     },
   });
 
   const createTaskMutation = useMutation({
     mutationFn: async (task) => {
-      const { data } = await api.post('/tasks', { ...task, projectId: id });
+      const { data } = await api.post('tasks', { ...task, projectId: id });
       return data;
     },
     onSuccess: () => {
@@ -76,7 +76,7 @@ const ProjectDetails = () => {
 
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ taskId, status }) => {
-      const { data } = await api.put(`/tasks/${taskId}`, { status });
+      const { data } = await api.put(`tasks/${taskId}`, { status });
       return data;
     },
     onSuccess: () => {

@@ -37,7 +37,7 @@ const Dashboard = () => {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['stats'],
     queryFn: async () => {
-      const { data } = await api.get('/tasks/stats');
+      const { data } = await api.get('tasks/stats');
       return data;
     },
   });

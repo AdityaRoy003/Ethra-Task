@@ -67,14 +67,14 @@ const Projects = () => {
   const { data: projects, isLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
-      const { data } = await api.get('/projects');
+      const { data } = await api.get('projects');
       return data;
     },
   });
 
   const createMutation = useMutation({
     mutationFn: async (project) => {
-      const { data } = await api.post('/projects', project);
+      const { data } = await api.post('projects', project);
       return data;
     },
     onSuccess: () => {
