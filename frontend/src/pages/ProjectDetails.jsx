@@ -1,56 +1,65 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, CheckCircle2, Clock, ListTodo, UserPlus, Calendar, MoreVertical, MessageSquare } from 'lucide-react';
 
-const TaskCard = ({ task, onUpdateStatus }) => (
-  <motion.div 
-    layout
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    whileHover={{ y: -3 }}
-    className="bg-slate-900 border border-slate-800/50 p-5 rounded-2xl shadow-sm group"
-  >
-    <div className="flex justify-between items-start mb-3">
-      <h4 className="font-semibold text-slate-200 group-hover:text-primary-400 transition-colors">{task.title}</h4>
-      <button className="text-slate-600 hover:text-white transition-colors">
-        <MoreVertical size={16} />
-      </button>
-    </div>
-    
-    <p className="text-sm text-slate-500 mb-5 line-clamp-2 leading-relaxed">{task.description}</p>
-    
-    <div className="flex items-center justify-between">
-      <div className="flex -space-x-1.5">
-        <div className="w-7 h-7 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-[10px] font-bold text-primary-400">
-          {task.assignee?.name?.charAt(0) || '?'}
-        </div>
+const TaskCard = ({ task, onUpdateStatus, currentUser }) => {
+  const canUpdate = currentUser?.role === 'ADMIN' || 
+                    currentUser?.role === 'MANAGER' || 
+                    task.assigneeId === currentUser?.id;
+
+  return (
+    <motion.div 
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ y: -3 }}
+      className="bg-slate-900 border border-slate-800/50 p-5 rounded-2xl shadow-sm group"
+    >
+      <div className="flex justify-between items-start mb-3">
+        <h4 className="font-semibold text-slate-200 group-hover:text-primary-400 transition-colors">{task.title}</h4>
+        <button className="text-slate-600 hover:text-white transition-colors">
+          <MoreVertical size={16} />
+        </button>
       </div>
       
-      <div className="flex items-center space-x-3 text-slate-600">
-        <div className="flex items-center space-x-1">
-          <MessageSquare size={14} />
-          <span className="text-[10px] font-bold">2</span>
+      <p className="text-sm text-slate-500 mb-5 line-clamp-2 leading-relaxed">{task.description}</p>
+      
+      <div className="flex items-center justify-between">
+        <div className="flex -space-x-1.5">
+          <div className="w-7 h-7 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-[10px] font-bold text-primary-400">
+            {task.assignee?.name?.charAt(0) || '?'}
+          </div>
         </div>
-        <select
-          className="bg-slate-800/50 border-none text-[10px] font-bold uppercase tracking-widest text-primary-500 cursor-pointer focus:ring-0 outline-none rounded-lg px-2 py-1"
-          value={task.status}
-          onChange={(e) => onUpdateStatus({ taskId: task.id, status: e.target.value })}
-        >
-          <option value="TODO">Todo</option>
-          <option value="IN_PROGRESS">Progress</option>
-          <option value="DONE">Done</option>
-        </select>
+        
+        <div className="flex items-center space-x-3 text-slate-600">
+          <div className="flex items-center space-x-1">
+            <MessageSquare size={14} />
+            <span className="text-[10px] font-bold">2</span>
+          </div>
+          <select
+            className={`bg-slate-800/50 border-none text-[10px] font-bold uppercase tracking-widest text-primary-500 rounded-lg px-2 py-1 outline-none ${!canUpdate ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            value={task.status}
+            onChange={(e) => canUpdate && onUpdateStatus({ taskId: task.id, status: e.target.value })}
+            disabled={!canUpdate}
+          >
+            <option value="TODO">Todo</option>
+            <option value="IN_PROGRESS">Progress</option>
+            <option value="DONE">Done</option>
+          </select>
+        </div>
       </div>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 const ProjectDetails = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', description: '', assigneeId: '', dueDate: '' });
 
@@ -114,15 +123,17 @@ const ProjectDetails = () => {
               <UserPlus size={18} />
             </button>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsTaskModalOpen(true)}
-            className="flex items-center space-x-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-2xl transition-all shadow-lg shadow-primary-500/20 font-bold"
-          >
-            <Plus size={20} />
-            <span>Add Task</span>
-          </motion.button>
+          {currentUser?.role !== 'MEMBER' && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsTaskModalOpen(true)}
+              className="flex items-center space-x-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-2xl transition-all shadow-lg shadow-primary-500/20 font-bold"
+            >
+              <Plus size={20} />
+              <span>Add Task</span>
+            </motion.button>
+          )}
         </div>
       </div>
 
@@ -149,6 +160,7 @@ const ProjectDetails = () => {
                     key={task.id} 
                     task={task} 
                     onUpdateStatus={updateTaskStatusMutation.mutate} 
+                    currentUser={currentUser}
                   />
                 ))}
               </AnimatePresence>

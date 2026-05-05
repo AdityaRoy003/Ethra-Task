@@ -4,6 +4,7 @@ import api from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Folder, Users, ChevronRight, Search, LayoutGrid, List } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const ProjectCard = ({ project, index }) => (
   <motion.div
@@ -63,6 +64,7 @@ const Projects = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProject, setNewProject] = useState({ name: '', description: '' });
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: projects, isLoading } = useQuery({
     queryKey: ['projects'],
@@ -105,15 +107,17 @@ const Projects = () => {
             <button className="p-2 bg-slate-800 text-primary-400 rounded-lg shadow-sm"><LayoutGrid size={18} /></button>
             <button className="p-2 text-slate-500 hover:text-white"><List size={18} /></button>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center space-x-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-2xl transition-all shadow-lg shadow-primary-500/20 font-bold"
-          >
-            <Plus size={20} />
-            <span>New Project</span>
-          </motion.button>
+          {user?.role !== 'MEMBER' && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center space-x-2 bg-primary-600 hover:bg-primary-500 text-white px-6 py-3 rounded-2xl transition-all shadow-lg shadow-primary-500/20 font-bold"
+            >
+              <Plus size={20} />
+              <span>New Project</span>
+            </motion.button>
+          )}
         </div>
       </div>
 

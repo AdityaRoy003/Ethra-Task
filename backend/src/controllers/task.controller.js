@@ -4,6 +4,14 @@ export const createTask = async (req, res) => {
   const { title, description, status, dueDate, projectId, assigneeId } = req.body;
 
   try {
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const isAuthorized = project.ownerId === req.user.id || req.user.role !== 'MEMBER';
+    if (!isAuthorized) {
+      return res.status(403).json({ message: 'Not authorized to create tasks in this project' });
+    }
+
     const task = await prisma.task.create({
       data: {
         title,
@@ -26,7 +34,22 @@ export const updateTask = async (req, res) => {
   const { title, description, status, dueDate, assigneeId } = req.body;
 
   try {
-    const task = await prisma.task.update({
+    const task = await prisma.task.findUnique({
+      where: { id },
+      include: { project: true }
+    });
+
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    const isAuthorized = req.user.role !== 'MEMBER' || 
+                         task.project.ownerId === req.user.id ||
+                         task.assigneeId === req.user.id;
+
+    if (!isAuthorized) {
+      return res.status(403).json({ message: 'Not authorized to update this task' });
+    }
+
+    const updatedTask = await prisma.task.update({
       where: { id },
       data: {
         title,
@@ -37,7 +60,7 @@ export const updateTask = async (req, res) => {
       },
     });
 
-    res.json(task);
+    res.json(updatedTask);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

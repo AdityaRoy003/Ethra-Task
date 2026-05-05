@@ -4,9 +4,11 @@ import api from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, Clock, ListTodo, ExternalLink, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Tasks = () => {
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks'],
@@ -91,15 +93,23 @@ const Tasks = () => {
                       </span>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <select
-                        className="bg-slate-800/50 border border-slate-700/50 text-[10px] font-bold uppercase tracking-widest text-primary-500 cursor-pointer focus:ring-2 focus:ring-primary-500/50 outline-none rounded-xl px-3 py-2"
-                        value={task.status}
-                        onChange={(e) => updateStatusMutation.mutate({ taskId: task.id, status: e.target.value })}
-                      >
-                        <option value="TODO">To Do</option>
-                        <option value="IN_PROGRESS">Progress</option>
-                        <option value="DONE">Completed</option>
-                      </select>
+                      {(() => {
+                        const canUpdate = currentUser?.role === 'ADMIN' || 
+                                          currentUser?.role === 'MANAGER' || 
+                                          task.assigneeId === currentUser?.id;
+                        return (
+                          <select
+                            className={`bg-slate-800/50 border border-slate-700/50 text-[10px] font-bold uppercase tracking-widest text-primary-500 rounded-xl px-3 py-2 outline-none ${!canUpdate ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            value={task.status}
+                            onChange={(e) => canUpdate && updateStatusMutation.mutate({ taskId: task.id, status: e.target.value })}
+                            disabled={!canUpdate}
+                          >
+                            <option value="TODO">To Do</option>
+                            <option value="IN_PROGRESS">Progress</option>
+                            <option value="DONE">Completed</option>
+                          </select>
+                        );
+                      })()}
                     </td>
                   </motion.tr>
                 ))}

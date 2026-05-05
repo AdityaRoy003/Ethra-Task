@@ -3,6 +3,10 @@ import prisma from '../lib/prisma.js';
 export const createProject = async (req, res) => {
   const { name, description } = req.body;
 
+  if (req.user.role === 'MEMBER') {
+    return res.status(403).json({ message: 'Only Admins and Managers can create projects' });
+  }
+
   try {
     const project = await prisma.project.create({
       data: {
@@ -91,6 +95,13 @@ export const addMember = async (req, res) => {
   const { email } = req.body;
 
   try {
+    const project = await prisma.project.findUnique({ where: { id: projectId } });
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    if (project.ownerId !== req.user.id && req.user.role === 'MEMBER') {
+      return res.status(403).json({ message: 'Not authorized to add members' });
+    }
+
     const userToAdd = await prisma.user.findUnique({ where: { email } });
     if (!userToAdd) return res.status(404).json({ message: 'User not found' });
 
