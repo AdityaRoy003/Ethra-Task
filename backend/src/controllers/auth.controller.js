@@ -67,3 +67,31 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   res.json(req.user);
 };
+
+export const updateProfile = async (req, res) => {
+  const { name, email, password } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const updateData = { name, email };
+    
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(password, salt);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    res.json({
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

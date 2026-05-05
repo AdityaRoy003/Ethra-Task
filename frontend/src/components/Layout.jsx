@@ -68,6 +68,7 @@ const Layout = () => {
           <SidebarLink to="/" icon={LayoutDashboard}>Dashboard</SidebarLink>
           <SidebarLink to="/projects" icon={FolderKanban}>Projects</SidebarLink>
           <SidebarLink to="/tasks" icon={CheckSquare}>My Tasks</SidebarLink>
+          <SidebarLink to="/profile" icon={User}>Profile</SidebarLink>
         </nav>
 
         <div className="p-6 m-6 bg-slate-800/40 rounded-2xl border border-slate-700/50">
@@ -115,7 +116,7 @@ const Layout = () => {
               <span className="absolute top-2 right-2 w-2 h-2 bg-primary-500 rounded-full border-2 border-slate-950" />
             </button>
             <div className="h-8 w-[1px] bg-slate-800" />
-            <div className="flex items-center space-x-3 cursor-pointer group">
+            <Link to="/profile" className="flex items-center space-x-3 cursor-pointer group">
               <div className="text-right">
                 <p className="text-sm font-medium group-hover:text-primary-400 transition-colors">{user.name}</p>
                 <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Pro Account</p>
@@ -125,7 +126,7 @@ const Layout = () => {
                   {user.name.charAt(0)}
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         </header>
         

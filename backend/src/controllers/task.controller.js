@@ -96,3 +96,31 @@ export const getDashboardStats = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getProjectStats = async (req, res) => {
+  try {
+    const projects = await prisma.project.findMany({
+      where: {
+        OR: [
+          { ownerId: req.user.id },
+          { members: { some: { userId: req.user.id } } }
+        ]
+      },
+      select: {
+        name: true,
+        _count: {
+          select: { tasks: true }
+        }
+      }
+    });
+
+    const data = projects.map(p => ({
+      name: p.name,
+      tasks: p._count.tasks
+    }));
+
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
